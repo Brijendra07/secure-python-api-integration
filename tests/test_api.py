@@ -67,3 +67,86 @@ def test_fetch_endpoint_returns_502_for_integration_errors(monkeypatch):
 
     assert response.status_code == 502
     assert response.json() == {"detail": "upstream API failed"}
+
+
+def test_fetch_paginated_endpoint_returns_pages(monkeypatch):
+    class DummyIntegrationClient:
+        def fetch_paginated(
+            self,
+            *,
+            path=None,
+            base_params=None,
+            start_page=1,
+            end_page=1,
+            page_param="page",
+        ):
+            assert path == "/v1/demo"
+            assert base_params == {"limit": 2}
+            assert start_page == 1
+            assert end_page == 2
+            assert page_param == "page"
+            return [
+                {"page": 1, "payload": {"items": [1]}},
+                {"page": 2, "payload": {"items": [2]}},
+            ]
+
+    def fake_build_client():
+        from src.config import Settings
+
+        return Settings(api_data_path="/v1/data"), DummyIntegrationClient()
+
+    monkeypatch.setattr("src.main.build_client", fake_build_client)
+
+    response = client.post(
+        "/fetch-paginated",
+        json={"path": "/v1/demo", "params": {"limit": 2}, "start_page": 1, "end_page": 2},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["pages_fetched"] == [1, 2]
+
+
+def test_export_json_endpoint_returns_file(monkeypatch, tmp_path):
+    class DummyIntegrationClient:
+        def fetch_paginated(self, **kwargs):
+            return [{"page": 1, "payload": {"items": [1]}}]
+
+        def export_json(self, data, destination):
+            output = tmp_path / "integration_export.json"
+            output.write_text('[{"page": 1}]', encoding="utf-8")
+            return str(output)
+
+    def fake_build_client():
+        from src.config import Settings
+
+        return Settings(api_data_path="/v1/data"), DummyIntegrationClient()
+
+    monkeypatch.setattr("src.main.build_client", fake_build_client)
+
+    response = client.post("/export/json", json={})
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("application/json")
+
+
+def test_export_csv_endpoint_returns_file(monkeypatch, tmp_path):
+    class DummyIntegrationClient:
+        def fetch_paginated(self, **kwargs):
+            return [{"page": 1, "payload": {"items": [1]}}]
+
+        def export_csv(self, rows, destination):
+            output = tmp_path / "integration_export.csv"
+            output.write_text("page,payload\n1,\"{\\\"items\\\": [1]}\"\n", encoding="utf-8")
+            return str(output)
+
+    def fake_build_client():
+        from src.config import Settings
+
+        return Settings(api_data_path="/v1/data"), DummyIntegrationClient()
+
+    monkeypatch.setattr("src.main.build_client", fake_build_client)
+
+    response = client.post("/export/csv", json={})
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/csv")

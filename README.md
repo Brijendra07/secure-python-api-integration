@@ -11,6 +11,10 @@ This project focuses on the kind of backend work clients often need in productio
 - structured error handling
 - reusable Python client design
 - API service exposure through FastAPI
+- structured logging
+- retry support with backoff
+- paginated data retrieval
+- JSON and CSV export workflows
 
 It is designed as a portfolio-ready reference project for secure data access and external API integration workflows.
 
@@ -48,7 +52,7 @@ The project implements a Python client and a lightweight FastAPI service that:
 - clean request/response handling
 - structured exceptions for integration failures
 - reusable module layout for future API clients
-- FastAPI endpoints for health checks, config summary, and fetch operations
+- FastAPI endpoints for health checks, config summary, fetch, paginated fetch, and export operations
 - example script for running the integration flow
 - test coverage for auth, client, and API service behavior
 - README-driven setup and usage documentation
@@ -59,6 +63,7 @@ The project implements a Python client and a lightweight FastAPI service that:
 - `requests`
 - `FastAPI`
 - `Pydantic`
+- `pandas`
 - `pytest`
 - environment-based configuration using `.env`
 
@@ -75,7 +80,9 @@ secure-python-api-integration/
     client.py
     config.py
     exceptions.py
+    logging_utils.py
     main.py
+    retry.py
     schemas.py
   examples/
     run_demo.py
@@ -97,6 +104,9 @@ It demonstrates:
 - ability to expose secure integration logic through a backend API
 - clean code structure for maintainability
 - implementation focused on reliability instead of demo-only output
+- observability through structured logging
+- resilience through retry/backoff handling
+- paginated retrieval and export support for downstream workflows
 - tested service behavior for easier evolution and debugging
 
 This makes it relevant for jobs involving:
@@ -124,6 +134,9 @@ The FastAPI layer currently exposes:
 - `GET /health` for service health checks
 - `GET /config-summary` for safe config inspection
 - `POST /fetch` for authenticated request execution
+- `POST /fetch-paginated` for multi-page retrieval
+- `POST /export/json` for JSON export
+- `POST /export/csv` for CSV export
 
 ## Environment Variables
 
@@ -139,6 +152,8 @@ API_CLIENT_ID=your_client_id
 API_CLIENT_SECRET=your_client_secret
 PROXY_URL=
 REQUEST_TIMEOUT=30
+MAX_RETRIES=2
+RETRY_BACKOFF_SECONDS=0.5
 ```
 
 ## Example Commands
@@ -180,6 +195,8 @@ This project is designed around backend concerns that matter in real integration
 - explicit exception handling
 - clear separation between auth logic and request logic
 - API contract validation through typed request/response models
+- structured logging across auth, request, and API layers
+- controlled retries for transient transport and upstream failures
 
 ## Security Considerations
 
@@ -197,11 +214,11 @@ Suggested portfolio title:
 
 Suggested short description:
 
-`Built a secure Python-based API integration workflow with token authentication, refresh-token handling, proxy support, a FastAPI service layer, and structured error handling for reliable backend data access.`
+`Built a secure Python-based API integration workflow with token authentication, refresh-token handling, proxy support, FastAPI endpoints, retry/backoff handling, structured logging, and JSON/CSV export for reliable backend data access.`
 
 Suggested client-facing value statement:
 
-`This project demonstrates how I build practical Python backend integrations that work reliably in real environments, including authenticated APIs, enterprise proxy constraints, reusable request flows, and service-ready API endpoints.`
+`This project demonstrates how I build practical Python backend integrations that work reliably in real environments, including authenticated APIs, enterprise proxy constraints, reusable request flows, service-ready API endpoints, and export-friendly data pipelines.`
 
 ## Current Status
 
@@ -211,13 +228,14 @@ Implemented today:
 - refresh-token support
 - proxy-aware request configuration
 - FastAPI API layer
+- structured logging
+- retries with exponential backoff
+- paginated fetch support
+- JSON export support
+- CSV export support
 - automated tests for auth, client, and API endpoints
 
 ## Future Enhancements
 
 - support OAuth-style flows
-- add request retries with backoff
-- add structured logging
-- support pagination and batch retrieval
-- export retrieved data to JSON or CSV
 - add a lightweight demo dashboard UI

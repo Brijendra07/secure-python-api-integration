@@ -1,4 +1,5 @@
 import pytest
+from pathlib import Path
 
 from src.auth import TokenBundle
 from src.client import SecureAPIClient
@@ -114,3 +115,47 @@ def test_get_retries_on_retryable_server_error():
 
     assert result == {"result": "ok"}
     assert len(session.calls) == 2
+
+
+def test_fetch_paginated_collects_multiple_pages():
+    session = SequencedSession(
+        [
+            DummyResponse(payload={"items": [1]}),
+            DummyResponse(payload={"items": [2]}),
+        ]
+    )
+    client = SecureAPIClient(settings=make_settings(), session=session)
+    client.tokens = TokenBundle(access_token="access-123")
+
+    result = client.fetch_paginated(start_page=1, end_page=2, base_params={"limit": 10})
+
+    assert result == [
+        {"page": 1, "payload": {"items": [1]}},
+        {"page": 2, "payload": {"items": [2]}},
+    ]
+    assert session.calls[0]["params"] == {"limit": 10, "page": 1}
+    assert session.calls[1]["params"] == {"limit": 10, "page": 2}
+
+
+def test_export_json_writes_file(tmp_path: Path):
+    client = SecureAPIClient(settings=make_settings())
+    destination = tmp_path / "output.json"
+
+    file_path = client.export_json([{"page": 1, "payload": {"ok": True}}], destination)
+
+    assert Path(file_path).exists()
+    assert '"page": 1' in destination.read_text(encoding="utf-8")
+
+
+def test_export_csv_writes_file(tmp_path: Path):
+    client = SecureAPIClient(settings=make_settings())
+    destination = tmp_path / "output.csv"
+
+    file_path = client.export_csv(
+        [{"page": 1, "payload": '{"ok": true}'}],
+        destination,
+    )
+
+    assert Path(file_path).exists()
+    content = destination.read_text(encoding="utf-8")
+    assert "page,payload" in content

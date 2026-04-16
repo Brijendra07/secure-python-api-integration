@@ -31,5 +31,19 @@ class FetchResponse(BaseModel):
     data: Any
 
 
+class PaginatedFetchRequest(FetchRequest):
+    start_page: int = Field(default=1, ge=1)
+    end_page: int = Field(default=1, ge=1)
+    page_param: str = Field(default="page")
+
+
+class PaginatedFetchResponse(BaseModel):
+    success: bool = True
+    path: str
+    page_param: str
+    pages_fetched: list[int]
+    data: list[dict[str, Any]]
+
+
 class ErrorResponse(BaseModel):
     detail: str
