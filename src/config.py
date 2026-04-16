@@ -33,3 +33,12 @@ class Settings:
             "client_id": self.api_client_id,
             "client_secret": self.api_client_secret,
         }
+
+    def summary(self) -> dict[str, str | bool | int]:
+        return {
+            "api_base_url": self.api_base_url,
+            "api_auth_url": self.api_auth_url,
+            "api_data_path": self.api_data_path,
+            "proxy_enabled": bool(self.proxy_url),
+            "request_timeout": self.request_timeout,
+        }

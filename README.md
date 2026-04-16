@@ -10,6 +10,7 @@ This project focuses on the kind of backend work clients often need in productio
 - reliable API communication
 - structured error handling
 - reusable Python client design
+- API service exposure through FastAPI
 
 It is designed as a portfolio-ready reference project for secure data access and external API integration workflows.
 
@@ -27,14 +28,15 @@ This project demonstrates how to build a clean Python integration layer that han
 
 ## Core Use Case
 
-The project simulates or implements a Python client that:
+The project implements a Python client and a lightweight FastAPI service that:
 
 1. authenticates with an external API
 2. stores or reuses an access token
 3. refreshes credentials when needed
 4. sends authenticated requests to protected endpoints
 5. optionally supports proxy configuration
-6. returns structured results with safe error handling
+6. exposes integration behavior through API endpoints
+7. returns structured results with safe error handling
 
 ## Features
 
@@ -46,33 +48,39 @@ The project simulates or implements a Python client that:
 - clean request/response handling
 - structured exceptions for integration failures
 - reusable module layout for future API clients
-- example script or demo endpoint for running the integration flow
+- FastAPI endpoints for health checks, config summary, and fetch operations
+- example script for running the integration flow
+- test coverage for auth, client, and API service behavior
 - README-driven setup and usage documentation
 
 ## Tech Stack
 
 - Python 3.12
-- `requests` or `httpx`
-- optional `FastAPI` for demo endpoints
+- `requests`
+- `FastAPI`
+- `Pydantic`
+- `pytest`
 - environment-based configuration using `.env`
 
-## Suggested Project Structure
+## Project Structure
 
 ```text
 secure-python-api-integration/
   README.md
   .env.example
   requirements.txt
+  pytest.ini
   src/
-    client.py
     auth.py
+    client.py
     config.py
     exceptions.py
-    models.py
     main.py
+    schemas.py
   examples/
     run_demo.py
   tests/
+    test_api.py
     test_auth.py
     test_client.py
 ```
@@ -86,8 +94,10 @@ It demonstrates:
 - secure API integration using Python
 - understanding of authentication and token lifecycle handling
 - ability to build backend utilities that work in real environments
+- ability to expose secure integration logic through a backend API
 - clean code structure for maintainability
 - implementation focused on reliability instead of demo-only output
+- tested service behavior for easier evolution and debugging
 
 This makes it relevant for jobs involving:
 
@@ -99,7 +109,7 @@ This makes it relevant for jobs involving:
 
 ## Example Functional Flow
 
-An example integration flow could work like this:
+An example integration flow works like this:
 
 1. Read API credentials and settings from environment variables
 2. Authenticate against a token endpoint
@@ -109,6 +119,12 @@ An example integration flow could work like this:
 6. If a proxy is configured, route requests through the proxy
 7. Return parsed JSON data or a clear integration error
 
+The FastAPI layer currently exposes:
+
+- `GET /health` for service health checks
+- `GET /config-summary` for safe config inspection
+- `POST /fetch` for authenticated request execution
+
 ## Environment Variables
 
 Example configuration:
@@ -116,6 +132,7 @@ Example configuration:
 ```env
 API_BASE_URL=https://api.example.com
 API_AUTH_URL=https://api.example.com/auth/token
+API_DATA_PATH=/v1/data
 API_USERNAME=your_username
 API_PASSWORD=your_password
 API_CLIENT_ID=your_client_id
@@ -140,10 +157,16 @@ Run a demo script:
 python examples/run_demo.py
 ```
 
-If a FastAPI wrapper is added:
+Run the FastAPI service:
 
 ```bash
 uvicorn src.main:app --reload
+```
+
+Run the test suite:
+
+```bash
+pytest
 ```
 
 ## Reliability Considerations
@@ -156,6 +179,7 @@ This project is designed around backend concerns that matter in real integration
 - safe config loading
 - explicit exception handling
 - clear separation between auth logic and request logic
+- API contract validation through typed request/response models
 
 ## Security Considerations
 
@@ -173,22 +197,27 @@ Suggested portfolio title:
 
 Suggested short description:
 
-`Built a secure Python-based API integration workflow with token authentication, refresh-token handling, proxy support, and structured error handling for reliable backend data access.`
+`Built a secure Python-based API integration workflow with token authentication, refresh-token handling, proxy support, a FastAPI service layer, and structured error handling for reliable backend data access.`
 
 Suggested client-facing value statement:
 
-`This project demonstrates how I build practical Python backend integrations that work reliably in real environments, including authenticated APIs, enterprise proxy constraints, and reusable request flows.`
+`This project demonstrates how I build practical Python backend integrations that work reliably in real environments, including authenticated APIs, enterprise proxy constraints, reusable request flows, and service-ready API endpoints.`
+
+## Current Status
+
+Implemented today:
+
+- secure token-based auth client
+- refresh-token support
+- proxy-aware request configuration
+- FastAPI API layer
+- automated tests for auth, client, and API endpoints
 
 ## Future Enhancements
 
-- add a FastAPI wrapper for integration endpoints
 - support OAuth-style flows
 - add request retries with backoff
-- add unit tests and mocked API responses
 - add structured logging
 - support pagination and batch retrieval
 - export retrieved data to JSON or CSV
-
-## Status
-
-This project is being prepared as a portfolio-ready backend sample focused on secure Python API integration patterns.
+- add a lightweight demo dashboard UI
