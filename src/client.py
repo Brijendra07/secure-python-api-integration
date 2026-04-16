@@ -8,6 +8,7 @@ from src.auth import Authenticator, TokenBundle
 from src.config import Settings
 from src.exceptions import RequestExecutionError
 from src.logging_utils import get_logger
+from src.retry import run_with_retry
 
 
 logger = get_logger(__name__)
@@ -21,6 +22,7 @@ class SecureAPIClient:
         self.session = session or requests.Session()
         self.authenticator = Authenticator(settings=self.settings, session=self.session)
         self.tokens: TokenBundle | None = None
+        self.sleep_func = __import__("time").sleep
 
     def ensure_authenticated(self) -> TokenBundle:
         if self.tokens is None:
@@ -59,13 +61,30 @@ class SecureAPIClient:
         tokens = self.ensure_authenticated()
         headers = {"Authorization": f"{tokens.token_type} {tokens.access_token}"}
 
-        try:
+        def operation() -> requests.Response:
             return self.session.get(
                 endpoint,
                 headers=headers,
                 params=params,
                 timeout=self.settings.request_timeout,
                 proxies=self.settings.proxies,
+            )
+
+        def should_retry(
+            response: requests.Response | None, error: Exception | None
+        ) -> bool:
+            if error is not None:
+                return isinstance(error, requests.RequestException)
+            return response is not None and response.status_code >= 500
+
+        try:
+            return run_with_retry(
+                operation,
+                max_retries=self.settings.max_retries,
+                backoff_seconds=self.settings.retry_backoff_seconds,
+                should_retry=should_retry,
+                operation_name="GET request",
+                sleep_func=self.sleep_func,
             )
         except requests.RequestException as exc:
             logger.exception("GET request raised a transport error")

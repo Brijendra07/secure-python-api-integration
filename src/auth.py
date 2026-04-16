@@ -8,6 +8,7 @@ import requests
 from src.config import Settings
 from src.exceptions import AuthenticationError
 from src.logging_utils import get_logger
+from src.retry import run_with_retry
 
 
 logger = get_logger(__name__)
@@ -26,6 +27,7 @@ class Authenticator:
     def __init__(self, settings: Settings, session: requests.Session | None = None):
         self.settings = settings
         self.session = session or requests.Session()
+        self.sleep_func = __import__("time").sleep
 
     def authenticate(self) -> TokenBundle:
         logger.info("Starting authentication flow")
@@ -48,13 +50,30 @@ class Authenticator:
             logger.error("Authentication failed because API_AUTH_URL is missing")
             raise AuthenticationError("API_AUTH_URL is not configured.")
 
-        try:
+        def operation() -> requests.Response:
             logger.info("Sending authentication request to token endpoint")
-            response = self.session.post(
+            return self.session.post(
                 self.settings.api_auth_url,
                 json=payload,
                 timeout=self.settings.request_timeout,
                 proxies=self.settings.proxies,
+            )
+
+        def should_retry(
+            response: requests.Response | None, error: Exception | None
+        ) -> bool:
+            if error is not None:
+                return isinstance(error, requests.RequestException)
+            return response is not None and response.status_code >= 500
+
+        try:
+            response = run_with_retry(
+                operation,
+                max_retries=self.settings.max_retries,
+                backoff_seconds=self.settings.retry_backoff_seconds,
+                should_retry=should_retry,
+                operation_name="Authentication request",
+                sleep_func=self.sleep_func,
             )
         except requests.RequestException as exc:
             logger.exception("Authentication request raised a transport error")

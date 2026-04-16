@@ -18,6 +18,8 @@ class Settings:
     api_client_secret: str = os.getenv("API_CLIENT_SECRET", "")
     proxy_url: str = os.getenv("PROXY_URL", "")
     request_timeout: int = int(os.getenv("REQUEST_TIMEOUT", "30"))
+    max_retries: int = int(os.getenv("MAX_RETRIES", "2"))
+    retry_backoff_seconds: float = float(os.getenv("RETRY_BACKOFF_SECONDS", "0.5"))
 
     @property
     def proxies(self) -> dict[str, str]:
@@ -41,4 +43,5 @@ class Settings:
             "api_data_path": self.api_data_path,
             "proxy_enabled": bool(self.proxy_url),
             "request_timeout": self.request_timeout,
+            "max_retries": self.max_retries,
         }

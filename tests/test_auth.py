@@ -18,14 +18,20 @@ class DummyResponse:
 
 class DummySession:
     def __init__(self, response):
-        self.response = response
+        if isinstance(response, list):
+            self.responses = list(response)
+        else:
+            self.responses = [response]
         self.calls = []
 
     def post(self, url, json, timeout, proxies):
         self.calls.append(
             {"url": url, "json": json, "timeout": timeout, "proxies": proxies}
         )
-        return self.response
+        current = self.responses.pop(0)
+        if isinstance(current, Exception):
+            raise current
+        return current
 
 
 def make_settings() -> Settings:
@@ -83,3 +89,19 @@ def test_authenticate_raises_when_auth_url_missing():
 
     with pytest.raises(AuthenticationError, match="API_AUTH_URL"):
         authenticator.authenticate()
+
+
+def test_authenticate_retries_on_retryable_server_error():
+    session = DummySession(
+        [
+            DummyResponse(ok=False, status_code=502, text="bad gateway"),
+            DummyResponse(payload={"access_token": "access-123"}),
+        ]
+    )
+    authenticator = Authenticator(settings=make_settings(), session=session)
+    authenticator.sleep_func = lambda _: None
+
+    tokens = authenticator.authenticate()
+
+    assert tokens.access_token == "access-123"
+    assert len(session.calls) == 2

@@ -97,3 +97,20 @@ def test_build_url_requires_api_base_url():
 
     with pytest.raises(RequestExecutionError, match="API_BASE_URL"):
         client._build_url("/v1/data")
+
+
+def test_get_retries_on_retryable_server_error():
+    session = SequencedSession(
+        [
+            DummyResponse(ok=False, status_code=503, text="service unavailable"),
+            DummyResponse(payload={"result": "ok"}),
+        ]
+    )
+    client = SecureAPIClient(settings=make_settings(), session=session)
+    client.tokens = TokenBundle(access_token="access-123")
+    client.sleep_func = lambda _: None
+
+    result = client.get()
+
+    assert result == {"result": "ok"}
+    assert len(session.calls) == 2
