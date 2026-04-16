@@ -7,6 +7,10 @@ import requests
 from src.auth import Authenticator, TokenBundle
 from src.config import Settings
 from src.exceptions import RequestExecutionError
+from src.logging_utils import get_logger
+
+
+logger = get_logger(__name__)
 
 
 class SecureAPIClient:
@@ -20,26 +24,34 @@ class SecureAPIClient:
 
     def ensure_authenticated(self) -> TokenBundle:
         if self.tokens is None:
+            logger.info("No cached token found, authenticating client")
             self.tokens = self.authenticator.authenticate()
         return self.tokens
 
     def get(self, path: str | None = None, params: dict[str, Any] | None = None) -> Any:
         endpoint = self._build_url(path or self.settings.api_data_path)
+        logger.info("Executing GET request against %s", endpoint)
         response = self._send_get(endpoint, params=params)
 
         if response.status_code == 401 and self.tokens and self.tokens.refresh_token:
+            logger.warning("Received 401 response, attempting token refresh")
             self.tokens = self.authenticator.refresh(self.tokens.refresh_token)
             response = self._send_get(endpoint, params=params)
 
         if not response.ok:
+            logger.error("GET request failed with status %s", response.status_code)
             raise RequestExecutionError(
                 f"API request failed with status {response.status_code}: {response.text}"
             )
 
         try:
-            return response.json()
+            payload = response.json()
         except ValueError as exc:
+            logger.exception("GET response could not be parsed as JSON")
             raise RequestExecutionError("API response was not valid JSON.") from exc
+
+        logger.info("GET request completed successfully")
+        return payload
 
     def _send_get(
         self, endpoint: str, params: dict[str, Any] | None = None
@@ -56,9 +68,11 @@ class SecureAPIClient:
                 proxies=self.settings.proxies,
             )
         except requests.RequestException as exc:
+            logger.exception("GET request raised a transport error")
             raise RequestExecutionError(f"API request failed: {exc}") from exc
 
     def _build_url(self, path: str) -> str:
         if not self.settings.api_base_url:
+            logger.error("Cannot build request URL because API_BASE_URL is missing")
             raise RequestExecutionError("API_BASE_URL is not configured.")
         return f"{self.settings.api_base_url.rstrip('/')}/{path.lstrip('/')}"
