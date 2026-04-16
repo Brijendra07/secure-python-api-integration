@@ -30,8 +30,8 @@ class Authenticator:
         self.sleep_func = __import__("time").sleep
 
     def authenticate(self) -> TokenBundle:
-        logger.info("Starting authentication flow")
-        response = self._post_token_request(self.settings.auth_payload)
+        logger.info("Starting authentication flow with mode %s", self.settings.auth_mode)
+        response = self._post_token_request(self._build_auth_payload())
         return self._parse_token_response(response)
 
     def refresh(self, refresh_token: str) -> TokenBundle:
@@ -44,6 +44,14 @@ class Authenticator:
         }
         response = self._post_token_request(payload)
         return self._parse_token_response(response)
+
+    def _build_auth_payload(self) -> dict[str, Any]:
+        if self.settings.auth_mode == "oauth_client_credentials":
+            logger.info("Using OAuth client credentials flow")
+            return self.settings.oauth_client_credentials_payload
+
+        logger.info("Using username/password authentication flow")
+        return self.settings.auth_payload
 
     def _post_token_request(self, payload: dict[str, Any]) -> requests.Response:
         if not self.settings.api_auth_url:

@@ -12,10 +12,12 @@ class Settings:
     api_base_url: str = os.getenv("API_BASE_URL", "")
     api_auth_url: str = os.getenv("API_AUTH_URL", "")
     api_data_path: str = os.getenv("API_DATA_PATH", "/v1/data")
+    auth_mode: str = os.getenv("AUTH_MODE", "basic")
     api_username: str = os.getenv("API_USERNAME", "")
     api_password: str = os.getenv("API_PASSWORD", "")
     api_client_id: str = os.getenv("API_CLIENT_ID", "")
     api_client_secret: str = os.getenv("API_CLIENT_SECRET", "")
+    oauth_scope: str = os.getenv("OAUTH_SCOPE", "")
     proxy_url: str = os.getenv("PROXY_URL", "")
     request_timeout: int = int(os.getenv("REQUEST_TIMEOUT", "30"))
     max_retries: int = int(os.getenv("MAX_RETRIES", "2"))
@@ -36,11 +38,23 @@ class Settings:
             "client_secret": self.api_client_secret,
         }
 
+    @property
+    def oauth_client_credentials_payload(self) -> dict[str, str]:
+        payload = {
+            "grant_type": "client_credentials",
+            "client_id": self.api_client_id,
+            "client_secret": self.api_client_secret,
+        }
+        if self.oauth_scope:
+            payload["scope"] = self.oauth_scope
+        return payload
+
     def summary(self) -> dict[str, str | bool | int]:
         return {
             "api_base_url": self.api_base_url,
             "api_auth_url": self.api_auth_url,
             "api_data_path": self.api_data_path,
+            "auth_mode": self.auth_mode,
             "proxy_enabled": bool(self.proxy_url),
             "request_timeout": self.request_timeout,
             "max_retries": self.max_retries,

@@ -5,6 +5,7 @@ A practical Python backend project that demonstrates secure API integration patt
 This project focuses on the kind of backend work clients often need in production:
 
 - token-based authentication
+- OAuth client credentials support
 - refresh token support
 - proxy-aware requests
 - reliable API communication
@@ -30,6 +31,11 @@ Many backend integrations fail not because of business logic, but because of ope
 
 This project demonstrates how to build a clean Python integration layer that handles those concerns in a reusable and production-oriented way.
 
+It now supports both:
+
+- username/password style token acquisition
+- OAuth client credentials style token acquisition
+
 ## Core Use Case
 
 The project implements a Python client and a lightweight FastAPI service that:
@@ -46,6 +52,7 @@ The project implements a Python client and a lightweight FastAPI service that:
 
 - Python-based API client for external service integration
 - token authentication workflow
+- OAuth-style client credentials authentication workflow
 - refresh token handling
 - configurable request headers and payloads
 - proxy support for restricted enterprise environments
@@ -146,10 +153,12 @@ Example configuration:
 API_BASE_URL=https://api.example.com
 API_AUTH_URL=https://api.example.com/auth/token
 API_DATA_PATH=/v1/data
+AUTH_MODE=basic
 API_USERNAME=your_username
 API_PASSWORD=your_password
 API_CLIENT_ID=your_client_id
 API_CLIENT_SECRET=your_client_secret
+OAUTH_SCOPE=
 PROXY_URL=
 REQUEST_TIMEOUT=30
 MAX_RETRIES=2
@@ -214,17 +223,18 @@ Suggested portfolio title:
 
 Suggested short description:
 
-`Built a secure Python-based API integration workflow with token authentication, refresh-token handling, proxy support, FastAPI endpoints, retry/backoff handling, structured logging, and JSON/CSV export for reliable backend data access.`
+`Built a secure Python-based API integration workflow with token and OAuth client-credentials authentication, refresh-token handling, proxy support, FastAPI endpoints, retry/backoff handling, structured logging, and JSON/CSV export for reliable backend data access.`
 
 Suggested client-facing value statement:
 
-`This project demonstrates how I build practical Python backend integrations that work reliably in real environments, including authenticated APIs, enterprise proxy constraints, reusable request flows, service-ready API endpoints, and export-friendly data pipelines.`
+`This project demonstrates how I build practical Python backend integrations that work reliably in real environments, including token and OAuth-based APIs, enterprise proxy constraints, reusable request flows, service-ready API endpoints, and export-friendly data pipelines.`
 
 ## Current Status
 
 Implemented today:
 
 - secure token-based auth client
+- OAuth client credentials auth support
 - refresh-token support
 - proxy-aware request configuration
 - FastAPI API layer
@@ -237,5 +247,4 @@ Implemented today:
 
 ## Future Enhancements
 
-- support OAuth-style flows
 - add a lightweight demo dashboard UI

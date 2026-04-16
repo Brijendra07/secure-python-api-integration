@@ -105,3 +105,25 @@ def test_authenticate_retries_on_retryable_server_error():
 
     assert tokens.access_token == "access-123"
     assert len(session.calls) == 2
+
+
+def test_authenticate_supports_oauth_client_credentials_flow():
+    session = DummySession(DummyResponse(payload={"access_token": "oauth-access"}))
+    settings = Settings(
+        api_auth_url="https://api.example.com/oauth/token",
+        auth_mode="oauth_client_credentials",
+        api_client_id="client-id",
+        api_client_secret="client-secret",
+        oauth_scope="read:items",
+    )
+    authenticator = Authenticator(settings=settings, session=session)
+
+    tokens = authenticator.authenticate()
+
+    assert tokens.access_token == "oauth-access"
+    assert session.calls[0]["json"] == {
+        "grant_type": "client_credentials",
+        "client_id": "client-id",
+        "client_secret": "client-secret",
+        "scope": "read:items",
+    }
