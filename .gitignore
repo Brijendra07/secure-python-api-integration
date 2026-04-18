@@ -3,3 +3,17 @@
 __pycache__/
 .pytest_cache/
 *.pyc
+*.pyo
+*.pyd
+
+# Test and coverage artifacts
+.coverage
+htmlcov/
+
+# Frontend dependencies and build output
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# OS/editor clutter
+.DS_Store

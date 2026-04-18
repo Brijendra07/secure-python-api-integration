@@ -16,6 +16,7 @@ This project focuses on the kind of backend work clients often need in productio
 - retry support with backoff
 - paginated data retrieval
 - JSON and CSV export workflows
+- premium React dashboard for visual flow demonstration
 
 It is designed as a portfolio-ready reference project for secure data access and external API integration workflows.
 
@@ -60,6 +61,7 @@ The project implements a Python client and a lightweight FastAPI service that:
 - structured exceptions for integration failures
 - reusable module layout for future API clients
 - FastAPI endpoints for health checks, config summary, fetch, paginated fetch, and export operations
+- React showcase UI for live console-style interaction
 - example script for running the integration flow
 - test coverage for auth, client, and API service behavior
 - README-driven setup and usage documentation
@@ -93,6 +95,14 @@ secure-python-api-integration/
     schemas.py
   examples/
     run_demo.py
+  frontend/
+    src/
+      App.jsx
+      main.jsx
+      mockData.js
+      styles.css
+    package.json
+    vite.config.js
   tests/
     test_api.py
     test_auth.py
@@ -145,6 +155,14 @@ The FastAPI layer currently exposes:
 - `POST /export/json` for JSON export
 - `POST /export/csv` for CSV export
 
+The React dashboard showcases:
+
+- backend health and config summary
+- auth mode and retry visibility
+- endpoint catalog
+- live fetch preview panel
+- portfolio-friendly operations console UI
+
 ## Environment Variables
 
 Example configuration:
@@ -185,6 +203,14 @@ Run the FastAPI service:
 
 ```bash
 uvicorn src.main:app --reload
+```
+
+Run the React frontend:
+
+```bash
+cd frontend
+npm install
+npm run dev
 ```
 
 Run the test suite:
@@ -244,7 +270,9 @@ Implemented today:
 - JSON export support
 - CSV export support
 - automated tests for auth, client, and API endpoints
+- premium React showcase UI
 
 ## Future Enhancements
 
-- add a lightweight demo dashboard UI
+- connect export buttons directly to backend download flows from the UI
+- add richer UI state for pagination and export previews
